@@ -1,0 +1,75 @@
+Movie
+    - id
+    - title
+    - year
+    - country : Country
+    - genres : Genre[]
+    - screenwriters : Person[]
+    - directors : Person[]
+    - composers : Person[]
+    - operators : Person[]
+    - artists : Person[]
+    - actors : Person[]
+    - premier_date
+    - duration_min
+    - description
+    - rate
+    - reviews : Review[]
+
+MoviesPersons
+    - id
+    - movie_id
+    - person_id
+    - role_id
+
+MoviesGenres
+    - id
+    - movie_id
+    - genre_id
+
+Country
+    - id
+    - name
+
+Person
+    - id
+    - full_name
+    - roles : Role[] # direcor, actor, screenwriter ...
+    - birth_date
+    - country : Country
+    - genres : Genre[]
+    - movies : Movie[]
+
+PersonsGenres
+    - id
+    - person_id
+    - genre_id
+
+Genre
+    - id
+    - name
+
+Role
+    - id
+    - name
+
+Review
+    - id
+    - title
+    - body
+    - movie : Movie
+    - author : User
+    - type : negative/positive/neutral
+    - likes
+    - dislikes
+    - created_at
+    - updated_at
+
+User
+    - id
+    - username
+    - email
+    - hash
+    - reviews : Review[]
+    - created_at
+    - updated_at
