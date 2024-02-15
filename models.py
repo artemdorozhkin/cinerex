@@ -1,8 +1,8 @@
 from ast import List
 from datetime import datetime
-from enum import Enum
-from typing import Optional
-from sqlalchemy import String
+from typing import Literal, Optional, get_args
+from sqlalchemy import Column, Enum, Table
+from sqlalchemy import String, Text
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
@@ -29,6 +29,48 @@ class Base(DeclarativeBase):
 #     - id
 #     - person_id
 #     - genre_id
+movies_actors = Table(
+    "movies_actors",
+    Base.metadata,
+    Column('movie_id', ForeignKey("movies.id")),
+    Column('peson_id', ForeignKey("pesons.id")),
+)
+
+movies_screenwriters = Table(
+    "movies_screenwriters",
+    Base.metadata,
+    Column('movie_id', ForeignKey("movies.id")),
+    Column('peson_id', ForeignKey("pesons.id")),
+)
+
+movies_directors = Table(
+    "movies_directors",
+    Base.metadata,
+    Column('movie_id', ForeignKey("movies.id")),
+    Column('peson_id', ForeignKey("pesons.id")),
+)
+
+movies_composers = Table(
+    "movies_composers",
+    Base.metadata,
+    Column('movie_id', ForeignKey("movies.id")),
+    Column('peson_id', ForeignKey("pesons.id")),
+)
+
+movies_operators = Table(
+    "movies_operators",
+    Base.metadata,
+    Column('movie_id', ForeignKey("movies.id")),
+    Column('peson_id', ForeignKey("pesons.id")),
+)
+
+movies_artists = Table(
+    "movies_artists",
+    Base.metadata,
+    Column('movie_id', ForeignKey("movies.id")),
+    Column('peson_id', ForeignKey("pesons.id")),
+)
+
 
 class Country(Base):
     __tablename__ = "countries"
@@ -36,7 +78,8 @@ class Country(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
 
-    persons: Mapped[List['Person']] = relationship(back_populates='countries')
+    persons: Mapped[List['Person']] = relationship(back_populates="countries")
+    movies: Mapped[List['Movie']] = relationship(back_populates="countries")
 
 
 class Genre(Base):
@@ -44,6 +87,11 @@ class Genre(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50))
+    movie_id: Mapped[int] = mapped_column(ForeignKey("movies.id"))
+    person_id: Mapped[int] = mapped_column(ForeignKey("persons.id"))
+
+    movies: Mapped[List['Movie']] = relationship(back_populates="genres")
+    persons: Mapped[List['Person']] = relationship(back_populates="genres")
 
 
 class Role(Base):
@@ -51,6 +99,9 @@ class Role(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50))
+    perons_id: Mapped[int] = mapped_column(ForeignKey("persons.id"))
+
+    persons: Mapped[List['Person']] = relationship(back_populates="roles")
 
 
 class Person(Base):
@@ -61,74 +112,77 @@ class Person(Base):
     birth_date: Mapped[datetime]
     country_id: Mapped[int] = mapped_column(ForeignKey("contries.id"))
 
-    genres: Mapped[List['Genre']] = relationship(
-        back_populates='persons', cascade="all, delete-orphan")
-    movies: Mapped[List['Movie']] = relationship(
-        back_populates='persons', cascade="all, delete-orphan")
-
-    countriy: Mapped["Country"] = relationship(back_populates="persons")
+    genres: Mapped[List['Genre']] = relationship(back_populates='persons')
+    movies: Mapped[List['Movie']] = relationship(back_populates='persons')
+    roles: Mapped[List['Role']] = relationship(back_populates='persons')
+    countriy: Mapped['Country'] = relationship(back_populates="persons")
 
 
 class Movie(Base):
     __tablename__ = "movies"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str] = mapped_column()
-    country_id: Mapped[int] = mapped_column()
+    title: Mapped[str] = mapped_column(String(100))
+    country_id: Mapped[int] = mapped_column(ForeignKey("countries.id"))
     year: Mapped[Optional[int]]
-    genre_id: Mapped[int] = mapped_column()
-    screenwriter_id: Mapped[int] = mapped_column()
-    director_id: Mapped[int] = mapped_column()
-    composer_id: Mapped[int] = mapped_column()
-    operator_id: Mapped[int] = mapped_column()
-    artist_id: Mapped[int] = mapped_column()
-    actor_id: Mapped[int] = mapped_column()
-    premier_date: Mapped[str] = mapped_column()
-    duration_min: Mapped[int] = mapped_column()
-    description: Mapped[str] = mapped_column()
-    rate: Mapped[float] = mapped_column()
-    review_id: Mapped[int] = mapped_column()
+    premier_date: Mapped[Optional[datetime]]
+    duration_min: Mapped[int] = mapped_column(default=0)
+    description: Mapped[str] = mapped_column(Text())
+    rate: Mapped[float] = mapped_column(default=0.0)
 
-    country: Mapped[List['Country']] = relationship(back_populates="movies")
+    country: Mapped['Country'] = relationship(back_populates="movies")
     genres: Mapped[List['Genre']] = relationship(back_populates="movies")
-    screenwriters: Mapped[List['Person']] = relationship(
-        back_populates="movies")
-    directors: Mapped[List['Person']] = relationship(back_populates="movies")
-    composers: Mapped[List['Person']] = relationship(back_populates="movies")
-    operators: Mapped[List['Person']] = relationship(back_populates="movies")
-    artists: Mapped[List['Person']] = relationship(back_populates="movies")
-    actors: Mapped[List['Person']] = relationship(back_populates="movies")
     reviews: Mapped[List['Review']] = relationship(back_populates="movies")
+    screenwriters: Mapped[List['Person']] = relationship(
+        secondary=movies_screenwriters)
+    directors: Mapped[List['Person']] = relationship(
+        secondary=movies_directors)
+    composers: Mapped[List['Person']] = relationship(
+        secondary=movies_composers)
+    operators: Mapped[List['Person']] = relationship(
+        secondary=movies_operators)
+    artists: Mapped[List['Person']] = relationship(secondary=movies_artists)
+    actors: Mapped[List['Person']] = relationship(secondary=movies_actors)
 
 
-class ReviewTypes(Enum):
-    negative = "negative"
-    positive = "positive"
-    neutral = "neutral"
+ReviewTypes = Literal[
+    "negative",
+    "positive",
+    "neutral",
+]
 
 
 class Review(Base):
     __tablename__ = "reviews"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str]
-    body: Mapped[str]
-    movie: Mapped['Movie']
-    author: Mapped['User']
-    type: Mapped['ReviewTypes']
-    likes: Mapped[int]
-    dislikes: Mapped[int]
-    created_at: Mapped[datetime]
-    updated_at: Mapped[datetime]
+    title: Mapped[str] = mapped_column(String(100))
+    body: Mapped[str] = mapped_column(Text())
+    movie_id: Mapped[int] = relationship(ForeignKey("movies.id"))
+    author_id: Mapped[int] = relationship(ForeignKey("users.id"))
+    type: Mapped[ReviewTypes] = mapped_column(Enum(
+        *get_args(ReviewTypes),
+        name="review_types",
+        create_constraint=True,
+        validate_strings=True,
+    ))
+    likes: Mapped[int] = mapped_column(default=0)
+    dislikes: Mapped[int] = mapped_column(default=0)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow())
+    updated_at: Mapped[datetime] = mapped_column(default=datetime.utcnow())
+
+    movie: Mapped['Movie'] = relationship(back_populates="reviews")
+    author: Mapped['User'] = relationship(back_populates="reviews")
 
 
 class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str]
-    email: Mapped[str]
-    hash: Mapped[str]
-    reviews: Mapped[List['Review']]
-    created_at: Mapped[datetime]
-    updated_at: Mapped[datetime]
+    username: Mapped[str] = mapped_column(String(20), unique=True)
+    email: Mapped[str] = mapped_column(String(20), unique=True)
+    hash: Mapped[str] = mapped_column(String())
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow())
+    updated_at: Mapped[datetime] = mapped_column(default=datetime.utcnow())
+
+    reviews: Mapped[List['Review']] = relationship(back_populates="users")
